@@ -203,6 +203,10 @@ Future<void> tryBuild(List<String> args) async {
   if (!isSingleDist) {
     openDirectory(distPath.path);
   }
+  print(
+    'Built locations:\n'
+    '${dist.map((e) => '　—— ${Uri.directory(path.join(distPath.path, e.name)).toFilePath()}').join('\n')}',
+  );
 }
 
 Field buildField({
