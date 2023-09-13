@@ -47,7 +47,10 @@ Future<void> tryBuild(List<String> args) async {
     projectPath = path.current;
   }
 
-  final env = result['env'];
+  final env = result['env'] as String?;
+  if (env?.isNotEmpty != true) {
+    throw ArgumentError('env must be specified.', 'env');
+  }
   final envPath = result['env-path'];
   final releaseConfigPath = result['release-config-path'];
   final sealed = result['sealed'];
