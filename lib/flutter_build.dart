@@ -94,6 +94,12 @@ Future<void> tryBuild(List<String> args) async {
   )..createSync(recursive: true);
   final isSingleDist = dist.length == 1;
   for (final d in dist) {
+    if (!Directory(path.join(workingDirectory, d.platform)).existsSync()) {
+      throw StateError(
+        'Dist [${d.file}] requires '
+        '[${d.platform}] platform but not exists.',
+      );
+    }
     final releaseFile = File(path.join(workingDirectory, releaseConfigPath))
       ..createSync(recursive: true);
     final fields = [
@@ -357,12 +363,13 @@ Future<void> openDirectory(String path) async {
 }
 
 enum BuildDist {
-  apk('apk'),
-  appbundle('aab'),
-  ipa('ipa'),
+  apk('apk', 'android'),
+  appbundle('aab', 'android'),
+  ipa('ipa', 'ios'),
   ;
 
-  const BuildDist(this.file);
+  const BuildDist(this.file, this.platform);
 
   final String file;
+  final String platform;
 }
