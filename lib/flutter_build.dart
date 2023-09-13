@@ -62,7 +62,10 @@ Future<void> tryBuild(List<String> args) async {
 
   final workingDirectory =
       Uri.directory(projectPath).toFilePath(windows: Platform.isWindows);
-  final shell = Shell(workingDirectory: workingDirectory);
+  final shell = Shell(
+    workingDirectory: workingDirectory,
+    environment: _expandoEnvironment(),
+  );
   await shell.run('flutter pub get');
   final envFile = File(path.join(workingDirectory, envPath));
   if (!envFile.existsSync()) {
@@ -226,6 +229,35 @@ Field buildField({
       ..static = true
       ..modifier = FieldModifier.constant,
   );
+}
+
+/// Replace recursive environment variables.
+Map<String, String> _expandoEnvironment() {
+  if (!Platform.isWindows) {
+    return Platform.environment;
+  }
+  final environment = Map<String, String>.from(Platform.environment);
+  final reg = RegExp(r'%(.+)%');
+  String replaceVariable(String value) {
+    final matches = reg.allMatches(value).map((e) => e.group(1)!);
+    for (final match in matches) {
+      String? variable = environment[match];
+      if (variable != null) {
+        final replaceKey = '%$match%';
+        // Escape self referencing.
+        if (!variable.contains(replaceKey) && reg.hasMatch(variable)) {
+          variable = replaceVariable(variable);
+        }
+        value = value.replaceAll(replaceKey, variable);
+      }
+    }
+    return value;
+  }
+
+  for (final entry in environment.entries) {
+    environment[entry.key] = replaceVariable(entry.value);
+  }
+  return environment;
 }
 
 Future<String?> genCommitRef(Shell shell) async {
