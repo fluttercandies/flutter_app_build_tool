@@ -77,6 +77,11 @@ Future<void> tryBuild(List<String> args) async {
   );
   final appName = yaml['name'];
   final version = yaml['version'].toString().split('+');
+  final versionName = version[0];
+  if (version.elementAtOrNull(1) == null) {
+    print('No version code has been set, fallback to 1.');
+  }
+  final versionCode = version.elementAtOrNull(1) ?? '1';
   final gitRef = await genCommitRef(shell);
   final buildTime = DateTime.now();
   final distPath = Directory(
@@ -91,8 +96,6 @@ Future<void> tryBuild(List<String> args) async {
   for (final d in dist) {
     final releaseFile = File(path.join(workingDirectory, releaseConfigPath))
       ..createSync(recursive: true);
-    final versionName = version[0];
-    final versionCode = version[1];
     final fields = [
       buildField(name: 'appName', value: appName),
       buildField(name: 'versionName', value: versionName),
