@@ -59,9 +59,16 @@ Future<void> tryBuild(List<String> args) async {
   if (dist.isEmpty) {
     throw StateError('No dist has been specified.');
   }
+  final workingDirectory = Uri.directory(projectPath).toFilePath();
+  for (final d in dist) {
+    if (!Directory(path.join(workingDirectory, d.platform)).existsSync()) {
+      throw StateError(
+        'Dist [${d.file}] requires '
+        '[${d.platform}] platform but not exists.',
+      );
+    }
+  }
 
-  final workingDirectory =
-      Uri.directory(projectPath).toFilePath(windows: Platform.isWindows);
   final shell = Shell(
     workingDirectory: workingDirectory,
     environment: _expandoEnvironment(),
@@ -94,12 +101,6 @@ Future<void> tryBuild(List<String> args) async {
   )..createSync(recursive: true);
   final isSingleDist = dist.length == 1;
   for (final d in dist) {
-    if (!Directory(path.join(workingDirectory, d.platform)).existsSync()) {
-      throw StateError(
-        'Dist [${d.file}] requires '
-        '[${d.platform}] platform but not exists.',
-      );
-    }
     final releaseFile = File(path.join(workingDirectory, releaseConfigPath))
       ..createSync(recursive: true);
     final fields = [
